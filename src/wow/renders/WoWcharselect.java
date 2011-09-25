@@ -113,6 +113,7 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
     
     private boolean selectChar(int charNum) {
         WoWgame.self().conn().writePacket(WoWpacket.CMSG_PLAYER_LOGIN,m_chars[charNum].guid());
+        WoWgame.self().setCharacter(m_chars[charNum]);
         WoWwindow.self().removeTab(tabName);
         return false;
     }

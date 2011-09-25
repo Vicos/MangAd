@@ -1,45 +1,21 @@
 
 package wow.renders;
 
-import java.util.HashMap;
-import java.util.Map;
 import wow.*;
 
-public class WoWchatbox extends javax.swing.JPanel implements WoWrender {
+public class WoWchattab extends javax.swing.JPanel {
 
-    private Map<String,WoWchattab> whisperTabs;
+    private String targetName;
     
-    public WoWchatbox() {
+    public WoWchattab(String _targetName) {
+        targetName = _targetName;
         initComponents();
-        WoWwindow.self().addTab("Chat", this);
-        whisperTabs = new HashMap();
+        WoWwindow.self().addTab(targetName, this);
     }
 
-    @Override
-    public boolean netEvent(WoWpacket pkt) {
-        switch (pkt.code()) {
-        case WoWpacket.SMSG_MESSAGECHAT:
-            WoWchat c = new WoWchat(pkt);
-            if(c.name() != null) {
-                switch(c.type()) {
-                    case WoWchat.MSG_SAY:
-                        uiChatText.append(c.name()+": "+c.text()+"\n");
-                        break;
-                    case WoWchat.MSG_WHISPER:
-                        if (!whisperTabs.containsKey(c.name())) {
-                            WoWchattab tab = new WoWchattab(c.name());
-                            whisperTabs.put(c.name(), tab);
-                        }
-                        whisperTabs.get(c.name()).displayMsg(c);
-                        break;
-                    case WoWchat.MSG_CHANNEL:
-                        break;
-                }
-            }
-            return true;
-        }
-        return false;
-    }   
+    public void displayMsg(WoWchat msg) {
+        uiChatText.append(msg.name()+": "+msg.text()+"\n");
+    }
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -51,7 +27,6 @@ public class WoWchatbox extends javax.swing.JPanel implements WoWrender {
         uiSend = new javax.swing.JButton();
 
         uiChatText.setColumns(20);
-        uiChatText.setEditable(false);
         uiChatText.setRows(5);
         jScrollPane1.setViewportView(uiChatText);
 
@@ -72,31 +47,32 @@ public class WoWchatbox extends javax.swing.JPanel implements WoWrender {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(uiMsgInput, javax.swing.GroupLayout.DEFAULT_SIZE, 623, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 688, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(uiMsgInput, javax.swing.GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(uiSend, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 720, Short.MAX_VALUE))
+                        .addComponent(uiSend, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(uiSend)
-                    .addComponent(uiMsgInput, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(uiMsgInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void sendboxHandler(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendboxHandler
-        WoWchat.SendChatMessage(uiMsgInput.getText(), WoWchat.MSG_SAY);
+        WoWchat.SendChatMessage(uiMsgInput.getText(), WoWchat.MSG_WHISPER, targetName);
+        uiChatText.append(WoWgame.self().playerName()+": "+uiMsgInput.getText()+"\n");
         uiMsgInput.setText("");
     }//GEN-LAST:event_sendboxHandler
 
@@ -106,5 +82,4 @@ public class WoWchatbox extends javax.swing.JPanel implements WoWrender {
     private javax.swing.JTextField uiMsgInput;
     private javax.swing.JButton uiSend;
     // End of variables declaration//GEN-END:variables
-
 }

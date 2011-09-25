@@ -333,11 +333,6 @@ public class WoWgame {
         m_playerName = chr.name();
         m_playerLevel = chr.level();
         m_mapArea = chr.area();
-        m_area = WoWarea.create(m_mapArea);
-        if (m_area != null) {
-            m_mapX = (m_area.minX() + m_area.maxX()) / 2;
-            m_mapY = (m_area.minY() + m_area.maxY()) / 2;
-        }
     }
 
     public void setBlip(long guid, double x, double y, double z, int color) {
