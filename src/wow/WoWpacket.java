@@ -21,6 +21,7 @@ public class WoWpacket {
     public static final int SMSG_GAMEOBJECT_QUERY_RESPONSE            = 0x05F;
     public static final int CMSG_CREATURE_QUERY                       = 0x060;
     public static final int SMSG_CREATURE_QUERY_RESPONSE              = 0x061;
+    public static final int CMSG_MESSAGECHAT                          = 0x095;
     public static final int SMSG_MESSAGECHAT                          = 0x096;
     public static final int SMSG_UPDATE_OBJECT                        = 0x0A9;
     public static final int SMSG_DESTROY_OBJECT                       = 0x0AA;

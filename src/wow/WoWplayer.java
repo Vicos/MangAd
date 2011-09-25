@@ -17,6 +17,9 @@ public class WoWplayer extends WoWunit {
     private int m_flags;
     private int m_xp;
     private int m_xpNext;
+    private int race;
+    private int gender;
+    private int pclass;
     private String m_name;
 
     public WoWplayer(long guid) {
@@ -35,6 +38,10 @@ public class WoWplayer extends WoWunit {
         return m_xpNext;
     }
 
+    public int race() {
+        return race;
+    }
+    
     public String name() {
         return m_name;
     }
@@ -59,9 +66,9 @@ public class WoWplayer extends WoWunit {
         pkt.getByte();
         m_name = pkt.getString();
         pkt.getString(); // realm
-        int race = pkt.getByte();
-        int gender = pkt.getByte();
-        int pclass = pkt.getByte();
+        race = pkt.getByte();
+        gender = pkt.getByte();
+        pclass = pkt.getByte();
         // decode declined names
         WoWgame.self().setDebug("Player "+WoWgame.self().guidStr(guid())+" is "+m_name);
     }

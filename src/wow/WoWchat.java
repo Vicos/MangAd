@@ -39,6 +39,10 @@ public class WoWchat {
     public int type() {
         return m_type;
     }
+    
+    public int lang() {
+        return m_lang;
+    }
 
     public String name() {
         return m_name;
@@ -105,6 +109,10 @@ public class WoWchat {
         pkt.getInt(); // text length
         String s = pkt.getString();
         m_tag = pkt.getByte();
+        
+        if (m_name == null)
+            m_name = WoWgame.self().toName(m_guid);
+        
         if (repl) {
             int p;
             while ((p = s.indexOf("%s")) >= 0)
@@ -120,6 +128,24 @@ public class WoWchat {
         }
         m_text = s;
         WoWgame.self().showDebug(m_name+" "+textType()+": "+m_text+" (type "+m_type+")");
+    }
+    
+    public static void SendChatMessage(String msg, int chatType) {
+        SendChatMessage(msg, chatType, null);
+    }
+    
+    public static void SendChatMessage(String msg, int chatType, String channel) {
+        WoWpacket pkt = new WoWpacket(WoWpacket.CMSG_MESSAGECHAT);
+        
+        pkt.addInt(chatType);
+        pkt.addInt(0); // TODO lang
+        
+        if(chatType == MSG_CHANNEL || chatType == MSG_WHISPER)
+            pkt.addString(channel);
+        
+        pkt.addString(msg);
+        
+        WoWgame.self().conn().writePacket(pkt);
     }
 
 }

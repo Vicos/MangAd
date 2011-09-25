@@ -881,6 +881,7 @@ public class WoWgame {
             System.out.println("Start first render");
             m_initial = false;
             renders.add(new WoWcharselect());
+            renders.add(new WoWchatbox());
         }
         if (m_interact) {
             m_interact = false;

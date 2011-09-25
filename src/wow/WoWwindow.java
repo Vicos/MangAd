@@ -122,9 +122,14 @@ public class WoWwindow extends javax.swing.JFrame {
         jTabbedPane.addTab(panelName, panel);
     }
     
-    public void removeTab(String panelName) {
-        int idxTab = jTabbedPane.indexOfTab(panelName);
+    public void removeTab(String tabName) {
+        int idxTab = jTabbedPane.indexOfTab(tabName);
         jTabbedPane.removeTabAt(idxTab);
+    }
+    
+    public void focusTab(String tabName) {
+        int idxTab = jTabbedPane.indexOfTab(tabName);
+        jTabbedPane.setSelectedIndex(idxTab);
     }
     
 }
