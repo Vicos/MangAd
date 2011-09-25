@@ -7,7 +7,6 @@ package wow;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Hashtable;
-import javax.microedition.io.Connector;
 
 public class WoWwdbc {
 
@@ -122,10 +121,8 @@ public class WoWwdbc {
         boolean ok = false;
         try {
             InputStream str = null;
-            if (locator.startsWith("resource:"))
-                str = getClass().getResourceAsStream(locator.substring(9));
-            else
-                str = Connector.openInputStream(locator);
+            assert(locator.startsWith("resource:"));
+            str = getClass().getResourceAsStream(locator.substring(9));
             ok = load(str);
             str.close();
         } catch (IOException e) {

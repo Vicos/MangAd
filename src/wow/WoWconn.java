@@ -7,9 +7,10 @@ package wow;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
 import java.util.Random;
 import java.util.Vector;
-import javax.microedition.io.*;
 import gnu.java.security.hash.*;
 import gnu.javax.crypto.prng.*;
 import gnu.javax.crypto.mac.*;
@@ -27,7 +28,7 @@ public class WoWconn {
         (byte)0x34, (byte)0x3C, (byte)0x53, (byte)0xEE,
         (byte)0x2F, (byte)0x43, (byte)0x67, (byte)0xCE
     };
-    private SocketConnection socket;
+    private Socket socket;
     private InputStream iStream;
     private OutputStream oStream;
     private String errorStr;
@@ -53,14 +54,16 @@ public class WoWconn {
         dCipher = null;
         eCipher = null;
         try {
-            socket = (SocketConnection)Connector.open("socket://"+addr,Connector.READ_WRITE,true);
-            iStream = socket.openInputStream();
-            oStream = socket.openOutputStream();
+            String hostname = addr.substring(0, addr.lastIndexOf(':'));
+            int port = Integer.parseInt(addr.substring(addr.lastIndexOf(':')+1));
+            socket = new Socket(hostname, port);
+            iStream = socket.getInputStream();
+            oStream = socket.getOutputStream();
         } catch (Exception e) {
             socket = null;
             iStream = null;
             oStream = null;
-            errorStr = e.getMessage();
+            e.printStackTrace();
             return;
         }
     }
@@ -216,15 +219,15 @@ public class WoWconn {
             int cmd = readByte() | (readByte() << 8);
             byte[] buf = (len > 0) ? readByte(len) : null;
             /*
-            	    String dump = "";
-            	    if (len > 0)
-            		dump = ": "+dumpHex(buf,12);
-            	    System.err.println("Got packet cmd=0x"+Integer.toHexString(cmd)+
-            		" data len=0x"+Integer.toHexString(len)+" ("+len+")"+dump);
-            */
+            String dump = "";
+            if (len > 0)
+                dump = ": "+dumpHex(buf,12);
+            System.err.println("Got packet cmd=0x"+Integer.toHexString(cmd)+
+                " data len=0x"+Integer.toHexString(len)+" ("+len+")"+dump);
+             */
             return new WoWpacket(cmd,buf);
         } catch (Exception e) {
-            errorStr = e.getMessage();
+            e.printStackTrace();
         }
         return null;
     }
@@ -285,8 +288,9 @@ public class WoWconn {
             startCrypt(m_session);
             return pkt;
         } catch (Exception e) {
-            errorStr = e.getMessage();
+            e.printStackTrace();
         }
+        System.err.println("End of readPacketAuth()");
         return null;
     }
 
@@ -316,9 +320,9 @@ public class WoWconn {
     public boolean writePacket(int cmd, byte[] buf) {
         int len = (buf == null) ? 0 : buf.length;
         /*
-        	System.err.println("Writing packet cmd=0x"+Integer.toHexString(cmd)+
-        	    " data len=0x"+Integer.toHexString(len)+" ("+len+")");
-        */
+        System.err.println("Writing packet cmd=0x"+Integer.toHexString(cmd)+
+            " data len=0x"+Integer.toHexString(len)+" ("+len+")");
+         */
         len += 4;
         byte hdr[] = new byte[6];
         hdr[0] = (byte)(len >> 8);

@@ -5,18 +5,19 @@
 package wow;
 
 import java.io.*;
-import javax.microedition.io.*;
-import javax.microedition.lcdui.*;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
-import java.lang.System;
+import java.util.ArrayList;
+import java.util.List;
 import com.jcraft.jzlib.*;
 import wow.cache.*;
+import wow.renders.*;
 
 public class WoWgame {
 
     private static WoWgame s_self = null;
+    private List<WoWrender> renders;
     private boolean m_paused;
     private boolean m_visible;
     private boolean m_silent;
@@ -31,26 +32,15 @@ public class WoWgame {
     private boolean m_debugging;
     private int m_width;
     private int m_height;
-    private int m_dragStartX;
-    private int m_dragStartY;
     private int m_bgColor;
-    private int m_bgVolume;
-    private int m_fgVolume;
-    private long m_lastFps;
     private WoWauth m_auth;
     private WoWconn m_conn;
-    private WoWrender m_screen;
-    private WoWrender m_prevScreen;
-    private WoWsound m_bgSound;
-    private WoWsound m_fgSound;
-    private long m_lastDrawn;
     private long m_lastUpdate;
     private WoWarea m_area;
     private WoWplayer m_player;
     private String m_playerRealm;
     private String m_playerName;
     private String m_playerLevel;
-    private Image m_playerIcon;
     private long m_playerGuid;
     private long m_selectGuid;
     private boolean m_threatened;
@@ -71,7 +61,6 @@ public class WoWgame {
     private Hashtable m_cacheGameObjects;
     private Hashtable m_cacheItemNames;
     private boolean m_cacheChanged;
-    private String m_altPath;
     private String m_debug;
     private String[] m_logs;
     private String[] m_info;
@@ -79,7 +68,8 @@ public class WoWgame {
     private long m_infoUp;
 
     private WoWgame() {
-        m_paused = true;
+        renders = new ArrayList<WoWrender>();
+        m_paused = false;
         m_visible = true;
         m_silent = false;
         m_detail = true;
@@ -92,21 +82,11 @@ public class WoWgame {
         m_debugging = false;
         m_width = 0;
         m_height = 0;
-        m_dragStartX = 0;
-        m_dragStartY = 0;
-        m_bgVolume = 50;
-        m_fgVolume = 50;
-        m_lastFps = 0;
         m_auth = null;
         m_conn = null;
-        m_screen = null;
-        m_prevScreen = null;
         m_bgColor = 0;
-        m_bgSound = null;
-        m_fgSound = null;
-        m_lastDrawn = 0;
         m_lastUpdate = 0;
-        m_playerRealm = "Test Realm";
+        m_playerRealm = "Vicos";
         m_logs = new String[4];
         for (int i = 0; i < m_logs.length; i++)
             m_logs[i] = null;
@@ -174,45 +154,7 @@ public class WoWgame {
     public static boolean stop(boolean unconditional) {
         if (s_self == null)
             return true;
-        return unconditional || s_self.stopEvent();
-    }
-
-    public void setExtra(WoWmobile client) {
-        m_debugging = m_debugging || "true".equalsIgnoreCase(client.getAppProperty("WoW-Debugging"));
-        m_detail = m_detail && !"false".equalsIgnoreCase(client.getAppProperty("WoW-Detailed"));
-        if (client.checkPermission("javax.microedition.io.Connector.file.read") > 0) {
-            m_altPath = System.getProperty("fileconn.dir.private");
-            if (m_altPath != null) {
-                try {
-                    Connection c = Connector.open(m_altPath+"exist.txt",Connector.READ);
-                    c.close();
-                } catch (Exception e) {
-                    System.err.println(m_altPath+" "+e.toString());
-                    m_altPath = null;
-                }
-            }
-            if (m_altPath == null) {
-                try {
-                    m_altPath = System.getProperty("fileconn.dir.memorycard");
-                    if (m_altPath != null) {
-                        m_altPath = m_altPath + "WoWmobile/";
-                        Connection c = Connector.open(m_altPath+"exist.txt",Connector.READ);
-                        c.close();
-                    }
-                } catch (Exception e) {
-                    System.err.println(m_altPath+" "+e.toString());
-                    m_altPath = null;
-                }
-            }
-        }
-        if (m_altPath == null)
-            m_altPath = client.getAppProperty("WoW-Alternate-Path");
-        showDebug("Alternate path: "+m_altPath);
-        m_debug = System.getProperty("microedition.platform");
-    }
-
-    public void setExtra(WoWcanvas canvas) {
-        m_hasPointer = canvas.hasPointerEvents();
+        return unconditional; // || s_self.stopEvent();
     }
 
     public void setAuth(WoWauth auth) {
@@ -236,10 +178,10 @@ public class WoWgame {
         m_paused = true;
         m_visible = false;
         m_silent = true;
-        setScreen(null);
+        //setScreen(null);
         m_width = 0;
         m_height = 0;
-        stopSounds(true);
+        //stopSounds(true);
         saveCache();
         if (m_auth != null) {
             m_auth.disconnect();
@@ -251,6 +193,10 @@ public class WoWgame {
         }
     }
 
+    public List<WoWrender> renders() {
+        return renders;
+    }
+    
     public boolean paused() {
         return m_paused;
     }
@@ -317,10 +263,6 @@ public class WoWgame {
 
     public String playerLevel() {
         return m_playerLevel;
-    }
-
-    public Image playerIcon() {
-        return m_playerIcon;
     }
 
     public long playerGuid() {
@@ -392,8 +334,6 @@ public class WoWgame {
         m_playerName = chr.name();
         m_playerLevel = chr.level();
         m_mapArea = chr.area();
-        if (chr.icon() != null)
-            m_playerIcon = chr.icon();
         m_area = WoWarea.create(m_mapArea);
         if (m_area != null) {
             m_mapX = (m_area.minX() + m_area.maxX()) / 2;
@@ -410,9 +350,6 @@ public class WoWgame {
         m_blips.put(b,b);
         if (m_blips.size() > old)
             showDebug("Number of blips: "+old+" -> "+m_blips.size());
-        WoWrender screen = m_screen;
-        if (screen instanceof wow.ui.Player)
-            ((wow.ui.Player)screen).setBlip(b);
     }
 
     public void delBlip(long guid) {
@@ -421,9 +358,6 @@ public class WoWgame {
         m_blips.remove(b);
         if (m_blips.size() < old) {
             showDebug("Number of blips: "+old+" -> "+m_blips.size());
-            WoWrender screen = m_screen;
-            if (screen instanceof wow.ui.Player)
-                ((wow.ui.Player)screen).delBlip(guid);
         }
     }
 
@@ -434,7 +368,6 @@ public class WoWgame {
     public void loggedOut() {
         m_playerName = null;
         m_playerLevel = null;
-        m_playerIcon = null;
         m_playerGuid = 0;
         m_selectGuid = 0;
         m_threatened = false;
@@ -450,13 +383,6 @@ public class WoWgame {
         m_mapHeading = 0.0;
         m_mapTurning = 0.0;
         m_mapSpeed = 0.0;
-        try {
-            m_playerIcon = Image.createImage("/images/spells/Frost_Stun.png");
-        } catch (Exception e) {
-            m_debugging = true;
-            e.printStackTrace();
-            m_debug = e.toString();
-        }
     }
 
     private void loadCache(final String recName, final String className, Hashtable cache) {
@@ -470,7 +396,7 @@ public class WoWgame {
             System.err.println("Failed to find cache class "+className);
             return;
         }
-        byte[] data = WoWmobile.getRecord(recName);
+        byte[] data = null; //= MangAd.getRecord(recName);
         if (data == null)
             return;
         ByteArrayInputStream bistr = new ByteArrayInputStream(data);
@@ -510,7 +436,7 @@ public class WoWgame {
             }
         }
         byte[] data = bos.toByteArray();
-        WoWmobile.setRecord(recName,data);
+        //MangAd.setRecord(recName,data);
         showDebug("Saved "+cache.size()+" elements to "+recName+" ("+data.length+" bytes)");
         try {
             os.close();
@@ -572,15 +498,6 @@ public class WoWgame {
 
     public void setStorage(String item) {
         m_storage.addElement(new WoWaction(item));
-    }
-
-    public void setVolume(int level) {
-        if (level == 0)
-            m_silent = true;
-        else {
-            m_silent = false;
-            m_fgVolume = m_bgVolume = level;
-        }
     }
 
     public void setBgColor(int color) {
@@ -871,9 +788,6 @@ public class WoWgame {
             else if (m_mapY > 16383.0)
                 m_mapY = 16383.0;
         }
-        WoWrender screen = m_screen;
-        if (screen != null)
-            screen.update(elapsed);
         int i;
         for (i = 0; i < m_actions.size(); i++) {
             WoWaction act = (WoWaction)m_actions.elementAt(i);
@@ -960,12 +874,9 @@ public class WoWgame {
 
     public int idle() {
         int msec = 100;
-        WoWrender screen = m_screen;
-        if (screen != null)
-            msec = screen.idle();
-        else if (m_initial && m_visible && !m_paused) {
+        if (m_initial && m_visible && !m_paused) {
             m_initial = false;
-            jumpScreen("CharSelect");
+            renders.add(new WoWcharlist());
         }
         if (m_interact) {
             m_interact = false;
@@ -1205,11 +1116,12 @@ public class WoWgame {
     }
 
     public void netEvent(WoWpacket pkt) {
-        WoWrender screen = m_screen;
-        if ((screen != null) && screen.netEvent(pkt))
-            return;
         long guid = 0;
         WoWwdbc db = null;
+        for(WoWrender render : renders) {
+            if( render.netEvent(pkt) )
+                return;
+        }
         switch (pkt.code()) {
         case WoWpacket.SMSG_MOTD:
             int lines = pkt.getInt();
@@ -1556,8 +1468,8 @@ public class WoWgame {
             int school = pkt.getByte();
             showDebug(toName(attacker)+" dealt to "+toName(guid)+" spell "+spell+" "+WoWspell.textSchool(school)+" damage "+dmg+" overkill "+over);
             // more to decode
-            if (guid == m_playerGuid && dmg > 0)
-                fireEffect(WoWspell.textSchool(school));
+            /* if (guid == m_playerGuid && dmg > 0)
+                fireEffect(WoWspell.textSchool(school)); */
         }
         break;
         case WoWpacket.SMSG_ATTACKERSTATEUPDATE: {
@@ -1567,8 +1479,8 @@ public class WoWgame {
             int dmg = pkt.getInt();
             showDebug("Attacker "+toName(attacker)+" dealt to "+toName(guid)+" damage "+dmg+" overkill "+pkt.getInt()+" hit info "+hitinfo);
             // more to decode
-            if (guid == m_playerGuid && dmg > 0)
-                fireEffect("normal");
+            /* if (guid == m_playerGuid && dmg > 0)
+                fireEffect("normal"); */
         }
         break;
         case WoWpacket.SMSG_DURABILITY_DAMAGE_DEATH:
@@ -1628,12 +1540,9 @@ public class WoWgame {
         showDebug("WoWgame.sizeEvent() "+width+" x "+height);
         m_width = width;
         m_height = height;
-        WoWrender screen = m_screen;
-        if (screen != null)
-            screen.sizeEvent(width,height);
     }
 
-    public void paintEvent(Graphics g) {
+/*    public void paintEvent(Graphics g) {
         int bg = m_bgColor;
         g.setColor(bg);
         g.fillRect(0,0,width(),height());
@@ -1679,9 +1588,9 @@ public class WoWgame {
         }
         if (done)
             return;
-    }
+    } */
 
-    public void showEvent(boolean visible) {
+/*    public void showEvent(boolean visible) {
         System.err.println("WoWgame.showEvent() visible="+visible);
         boolean wakeup = visible && !m_visible;
         m_visible = visible;
@@ -1691,9 +1600,9 @@ public class WoWgame {
             m_interact = true;
             startSounds();
         }
-    }
+    } */
 
-    public void pauseEvent(boolean paused) {
+/*    public void pauseEvent(boolean paused) {
         System.err.println("WoWgame.pauseEvent() paused="+paused);
         boolean wakeup = m_paused && !paused;
         m_paused = paused;
@@ -1705,16 +1614,16 @@ public class WoWgame {
             WoWwdbc.clear();
             System.gc();
         }
-    }
+    } */
 
-    public boolean stopEvent() {
+/*    public boolean stopEvent() {
         if (m_stopping || m_playerName == null)
             return true;
         m_stopping = true;
         return !pushScreen("Logout");
-    }
+    } */
 
-    public void keyEvent(int key, int action, boolean pressed, boolean repeated) {
+/*    public void keyEvent(int key, int action, boolean pressed, boolean repeated) {
         //showDebug("WoWgame.keyEvent() key="+key+" action="+action+" press="+pressed);
         m_interact = true;
         if (key == -8 || key == 8) {
@@ -1726,9 +1635,9 @@ public class WoWgame {
         }
         keyEventFwd(key,action,pressed,repeated);
         m_shiftLck = false;
-    }
+    } */
 
-    private void keyEventFwd(int key, int action, boolean pressed, boolean repeated) {
+/*    private void keyEventFwd(int key, int action, boolean pressed, boolean repeated) {
         if (shifted() && pressed && !repeated) {
             switch (key) {
             case -6: // left softkey
@@ -1779,9 +1688,9 @@ public class WoWgame {
             return;
         if (pressed && !repeated)
             showDebug("key="+key+" act="+action);
-    }
+    } */
 
-    public void ptrEvent(int x, int y, boolean pressed, boolean dragged) {
+    /* public void ptrEvent(int x, int y, boolean pressed, boolean dragged) {
         showDebug("WoWgame.ptrEvent("+x+","+y+") press="+pressed+" drag="+dragged);
         m_interact = true;
         if (!pressed) {
@@ -1796,8 +1705,9 @@ public class WoWgame {
         if ((screen != null) && screen.ptrEvent(x,y,pressed,dragged))
             return;
     }
+     */
 
-    public void setScreen(WoWrender screen) {
+/*    public void setScreen(WoWrender screen) {
         if (screen == m_screen)
             return;
         if (m_screen != null)
@@ -1809,14 +1719,14 @@ public class WoWgame {
         }
         if (m_screen == null)
             m_screen = screen;
-    }
+    } */
 
     public boolean showScreen(final String name) {
         try {
             Class sc = Class.forName("wow.ui."+name);
             if (sc != null) {
                 showDebug("Loaded UI class: "+sc.getName());
-                setScreen((WoWrender)sc.newInstance());
+                //setScreen((WoWrender)sc.newInstance());
                 return true;
             }
         } catch (Exception e) {
@@ -1827,50 +1737,50 @@ public class WoWgame {
         return false;
     }
 
-    public boolean showScreen(final String name, boolean clearFirst) {
+/*    public boolean showScreen(final String name, boolean clearFirst) {
         if (clearFirst)
             setScreen(null);
         return showScreen(name);
-    }
+    } */
 
-    public boolean pushScreen(final String name) {
+/*    public boolean pushScreen(final String name) {
         if (m_prevScreen == null)
             m_prevScreen = m_screen;
         return showScreen(name);
-    }
+    } */
 
-    public boolean popScreen() {
+/*    public boolean popScreen() {
         if (m_prevScreen == null)
             return false;
         WoWrender scr = m_prevScreen;
         m_prevScreen = null;
         setScreen(scr);
         return true;
-    }
+    } */
 
-    public boolean jumpScreen(final String name) {
+/*    public boolean jumpScreen(final String name) {
         m_prevScreen = null;
         return showScreen(name);
-    }
+    } */
 
-    public void fireEffect(int color, final String sound) {
+/*    public void fireEffect(int color, final String sound) {
         if (sound != null)
-            WoWgame.self().fireFgSound(WoWmobile.resource(sound));
+            WoWgame.self().fireFgSound(MangAd.resource(sound));
         if (color != 0)
             WoWgame.self().setBgColor(color);
-    }
+    } */
 
-    public void fireEffect(WoWeffect effect) {
+/*    public void fireEffect(WoWeffect effect) {
         if (effect != null)
             fireEffect(effect.color(),effect.sound());
-    }
+    } */
 
-    public void fireEffect(final String effect) {
+/*    public void fireEffect(final String effect) {
         if (effect != null)
             fireEffect((WoWeffect)m_effects.get(effect));
-    }
+    } */
 
-    public synchronized void setBgSound(final String locator) {
+/*    public synchronized void setBgSound(final String locator) {
         if (locator == null)
             return;
         if (m_bgSound != null)
@@ -1879,18 +1789,18 @@ public class WoWgame {
             return;
         m_bgSound = new WoWsound();
         m_bgSound.start(locator,true,m_bgVolume);
-    }
+    } */
 
-    public synchronized void setBgPath(final String path) {
+/*    public synchronized void setBgPath(final String path) {
         if (m_silent || (path == null))
             return;
         if (m_bgSound != null)
             m_bgSound.stop();
         m_bgSound = new WoWsound();
-        m_bgSound.start(WoWmobile.resource(path),m_altPath+path,true,m_bgVolume);
-    }
+        m_bgSound.start(MangAd.resource(path),m_altPath+path,true,m_bgVolume);
+    } */
 
-    public synchronized void fireFgSound(final String locator) {
+/*    public synchronized void fireFgSound(final String locator) {
         if (m_silent)
             return;
         if (m_fgSound != null)
@@ -1900,9 +1810,9 @@ public class WoWgame {
             m_fgSound.start(locator,false,m_fgVolume);
         } else
             m_fgSound = null;
-    }
+    } */
 
-    private synchronized void stopSounds(boolean forGood) {
+/*    private synchronized void stopSounds(boolean forGood) {
         if (m_bgSound != null) {
             if (forGood) {
                 m_bgSound.stop();
@@ -1914,17 +1824,17 @@ public class WoWgame {
             m_fgSound.stop();
             m_fgSound = null;
         }
-    }
+    } */
 
-    private synchronized void startSounds() {
+/*    private synchronized void startSounds() {
         if (m_silent)
             return;
         if (m_bgSound != null)
             m_bgSound.resume();
-    }
+    } */
 
-    private synchronized void applyVolume() {
+/*    private synchronized void applyVolume() {
         if (m_bgSound != null)
             m_bgSound.volume(m_bgVolume);
-    }
+    } */
 }

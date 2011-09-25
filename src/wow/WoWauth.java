@@ -7,9 +7,9 @@ package wow;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.Random;
 import java.util.Vector;
-import javax.microedition.io.*;
 import gnu.java.math.BigInteger;
 import gnu.java.security.hash.*;
 
@@ -19,7 +19,7 @@ public class WoWauth {
     private static final int LOGON_PROOF     = 0x01;
     private static final int REALM_LIST      = 0x10;
 
-    private SocketConnection socket;
+    private Socket socket;
     private InputStream iStream;
     private OutputStream oStream;
     private String errorStr;
@@ -38,7 +38,7 @@ public class WoWauth {
     private boolean authOk;
     private boolean realmsEof;
 
-    public WoWauth(final String addr, byte v0, byte v1, byte v2, int v3) {
+    public WoWauth(String addr, int port, byte v0, byte v1, byte v2, int v3) {
         m_v0 = v0;
         m_v1 = v1;
         m_v2 = v2;
@@ -47,9 +47,9 @@ public class WoWauth {
         if (addr.length() == 0)
             return;
         try {
-            socket = (SocketConnection)Connector.open("socket://"+addr,Connector.READ_WRITE,true);
-            iStream = socket.openInputStream();
-            oStream = socket.openOutputStream();
+            socket = new Socket(addr, port);
+            iStream = socket.getInputStream();
+            oStream = socket.getOutputStream();
         } catch (Exception e) {
             socket = null;
             iStream = null;
@@ -327,20 +327,20 @@ public class WoWauth {
         b[11] = (byte)m_v3;
         b[12] = (byte)(m_v3 >> 8);
         // Platform
-        b[13] = 'a';
-        b[14] = 'v';
-        b[15] = 'a';
-        b[16] = 'J';
+        b[13] = 0x00;
+        b[14] = '6';
+        b[15] = '8';
+        b[16] = 'x';
         // Operating system
-        b[17] = 'P';
-        b[18] = 'D';
-        b[19] = 'I';
-        b[20] = 'M';
+        b[17] = 0x00;
+        b[18] = 'n';
+        b[19] = 'i';
+        b[20] = 'W';
         // Locale
-        b[21] = 'B';
-        b[22] = 'G';
-        b[23] = 'n';
-        b[24] = 'e';
+        b[21] = 'R';
+        b[22] = 'F';
+        b[23] = 'r';
+        b[24] = 'f';
         // Timezone bias
         b[25] = (byte)tzo;
         b[26] = (byte)(tzo >> 8);
@@ -352,7 +352,7 @@ public class WoWauth {
         b[31] = (byte)0;
         b[32] = (byte)1;
         try {
-            String tmp = socket.getLocalAddress().trim();
+            String tmp = socket.getLocalAddress().getHostAddress().trim();
             System.err.println("Local Address: "+tmp);
             for (int i = 0; i < 4; i++) {
                 int p = tmp.indexOf('.');

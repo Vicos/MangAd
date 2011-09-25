@@ -4,8 +4,6 @@
 
 package wow;
 
-import javax.microedition.lcdui.*;
-
 public class WoWchar {
 
     public static final int RACE_HUMAN           =  1;
@@ -45,7 +43,6 @@ public class WoWchar {
     private String m_name;
     private String m_level;
     private String m_area;
-    private Image m_icon;
     public long m_guid;
     public int m_race;
     public int m_class;
@@ -56,29 +53,7 @@ public class WoWchar {
         m_name = name;
         m_level = level;
         m_area = area;
-        m_icon = null;
         m_guid = 0;
-    }
-
-    public WoWchar(final String name, final String level, final String area, Image icon) {
-        m_name = name;
-        m_level = level;
-        m_area = area;
-        m_icon = icon;
-        m_guid = 0;
-    }
-
-    public WoWchar(final String name, final String level, final String area, final String icon) {
-        m_name = name;
-        m_level = level;
-        m_area = area;
-        m_icon = null;
-        m_guid = 0;
-        try {
-            m_icon = Image.createImage(icon);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public String name() {
@@ -95,10 +70,6 @@ public class WoWchar {
 
     public String area() {
         return m_area;
-    }
-
-    public Image icon() {
-        return m_icon;
     }
 
     public static final String textRace(int race) {
