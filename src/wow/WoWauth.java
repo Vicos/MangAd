@@ -38,7 +38,7 @@ public class WoWauth {
     private boolean authOk;
     private boolean realmsEof;
 
-    public WoWauth(String addr, int port, byte v0, byte v1, byte v2, int v3) {
+    public WoWauth(String addr, byte v0, byte v1, byte v2, int v3) {
         m_v0 = v0;
         m_v1 = v1;
         m_v2 = v2;
@@ -47,7 +47,14 @@ public class WoWauth {
         if (addr.length() == 0)
             return;
         try {
-            socket = new Socket(addr, port);
+            String hostname = addr;
+            int port = 3724;
+            if(addr.indexOf(':') > 0) {
+                hostname = addr.substring(0, addr.lastIndexOf(':'));
+                port = Integer.parseInt(addr.substring(addr.lastIndexOf(':')+1));
+            }
+            
+            socket = new Socket(hostname, port);
             iStream = socket.getInputStream();
             oStream = socket.getOutputStream();
         } catch (Exception e) {

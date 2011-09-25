@@ -1,20 +1,14 @@
-// World of Warcraft Mobile
-//
-// MIDlet implementation
-
 package wow;
-
-import java.io.*;
 
 public class MangAd {
 
     private static String s_prefix = "resource:";
     
     private Thread m_async;
-    private String m_user, m_pass, m_serv;
-
     
     public static void main (String[] args) {
+        MangAd app = new MangAd();
+        
         // Config
         WoWconfig conf = new WoWconfig();
         
@@ -29,22 +23,9 @@ public class MangAd {
             e.printStackTrace();
         }
         
-        // Game
-        MangAd app = new MangAd();
-        
+        // Game      
         app.login(conf.GetS("user"), conf.GetS("pass"), conf.GetS("realm"));
-        final Thread game = new Thread() {
-            public void run() {
-                while (true) {
-                    try {
-                    this.sleep(WoWgame.self().idle());
-                    } catch(Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        game.start();        
+        app.startApp();
     }
     
     public static String resource(String name) {
@@ -53,22 +34,6 @@ public class MangAd {
 
     private void ingame(WoWauth auth) {
         System.err.println("WoWmobile.ingame()");
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream os = new DataOutputStream(bos);
-        try {
-            System.out.println(m_user);
-            System.out.println(m_pass);
-            System.out.println(m_serv);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            os.close();
-            bos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //WoWgame.self().setExtra(this);
         WoWgame.self().setAuth(auth);
     }
 
@@ -80,20 +45,12 @@ public class MangAd {
         System.err.println("WoWmobile.login() "+user);
         if (user == null || pass == null || serv == null || user.equals("") || pass.equals("") || serv.equals(""))
             return false;
-        String servAddr = serv;
-        int servPort = 3724;
-        if (serv.indexOf(':') > 0) {
-            servAddr = serv.substring(0, serv.lastIndexOf(':'));
-            servPort = Integer.parseInt( serv.substring(serv.lastIndexOf(':')+1) );
-        }
-        final String addr = servAddr;
-        final int port = servPort;
         System.err.println("Logging in "+user);
-        System.err.println("Connecting to "+servAddr+":"+servPort);
+        System.err.println("Connecting to "+serv);
         Thread login = new Thread() {
             public void run() {
                 m_async = this;
-                WoWauth auth = new WoWauth(addr, port,(byte)3,(byte)3,(byte)5,12340);
+                WoWauth auth = new WoWauth(serv,(byte)3,(byte)3,(byte)5,12340);
                 boolean ok = auth.doLogin(user,pass);
                 System.err.println("Conn: "+auth.isConnected()+", Auth: "+ok+", error: "+auth.getError());
                 if (ok)
@@ -119,11 +76,23 @@ public class MangAd {
     }
 
     public void pauseApp() {
-        //WoWgame.self().pauseEvent(true);
+        WoWgame.self().pauseEvent(true);
     }
 
     public void startApp() {
         System.err.println("WoWmobile.startApp()");
-        //WoWgame.self().pauseEvent(false);
+        final Thread game = new Thread() {
+            public void run() {
+                while (true) {
+                    try {
+                    this.sleep(WoWgame.self().idle());
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        game.start();
+        WoWgame.self().pauseEvent(false);
     }
 }

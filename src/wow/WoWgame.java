@@ -69,7 +69,7 @@ public class WoWgame {
 
     private WoWgame() {
         renders = new ArrayList<WoWrender>();
-        m_paused = false;
+        m_paused = true;
         m_visible = true;
         m_silent = false;
         m_detail = true;
@@ -1602,19 +1602,14 @@ public class WoWgame {
         }
     } */
 
-/*    public void pauseEvent(boolean paused) {
+    public void pauseEvent(boolean paused) {
         System.err.println("WoWgame.pauseEvent() paused="+paused);
-        boolean wakeup = m_paused && !paused;
         m_paused = paused;
-        if (m_paused || !m_visible)
-            stopSounds(false);
-        else if (wakeup && m_visible)
-            startSounds();
         if (paused) {
             WoWwdbc.clear();
             System.gc();
         }
-    } */
+    }
 
 /*    public boolean stopEvent() {
         if (m_stopping || m_playerName == null)
@@ -1721,6 +1716,7 @@ public class WoWgame {
             m_screen = screen;
     } */
 
+    /*
     public boolean showScreen(final String name) {
         try {
             Class sc = Class.forName("wow.ui."+name);
@@ -1735,7 +1731,7 @@ public class WoWgame {
             setDebug(e.toString());
         }
         return false;
-    }
+    } */
 
 /*    public boolean showScreen(final String name, boolean clearFirst) {
         if (clearFirst)
@@ -1778,63 +1774,5 @@ public class WoWgame {
 /*    public void fireEffect(final String effect) {
         if (effect != null)
             fireEffect((WoWeffect)m_effects.get(effect));
-    } */
-
-/*    public synchronized void setBgSound(final String locator) {
-        if (locator == null)
-            return;
-        if (m_bgSound != null)
-            m_bgSound.stop();
-        if (m_silent)
-            return;
-        m_bgSound = new WoWsound();
-        m_bgSound.start(locator,true,m_bgVolume);
-    } */
-
-/*    public synchronized void setBgPath(final String path) {
-        if (m_silent || (path == null))
-            return;
-        if (m_bgSound != null)
-            m_bgSound.stop();
-        m_bgSound = new WoWsound();
-        m_bgSound.start(MangAd.resource(path),m_altPath+path,true,m_bgVolume);
-    } */
-
-/*    public synchronized void fireFgSound(final String locator) {
-        if (m_silent)
-            return;
-        if (m_fgSound != null)
-            m_fgSound.stop();
-        if ((locator != null) && (m_fgVolume > 0)) {
-            m_fgSound = new WoWsound();
-            m_fgSound.start(locator,false,m_fgVolume);
-        } else
-            m_fgSound = null;
-    } */
-
-/*    private synchronized void stopSounds(boolean forGood) {
-        if (m_bgSound != null) {
-            if (forGood) {
-                m_bgSound.stop();
-                m_bgSound = null;
-            } else
-                m_bgSound.pause();
-        }
-        if (m_fgSound != null) {
-            m_fgSound.stop();
-            m_fgSound = null;
-        }
-    } */
-
-/*    private synchronized void startSounds() {
-        if (m_silent)
-            return;
-        if (m_bgSound != null)
-            m_bgSound.resume();
-    } */
-
-/*    private synchronized void applyVolume() {
-        if (m_bgSound != null)
-            m_bgSound.volume(m_bgVolume);
     } */
 }
