@@ -146,4 +146,8 @@ public class WoWchar {
         return textRace(m_gender);
     }
 
+    public String toString() {
+        return name()+" ["+level()+"]";
+    }
+    
 }

@@ -86,7 +86,6 @@ public class WoWgame {
         m_conn = null;
         m_bgColor = 0;
         m_lastUpdate = 0;
-        m_playerRealm = "Vicos";
         m_logs = new String[4];
         for (int i = 0; i < m_logs.length; i++)
             m_logs[i] = null;
@@ -567,7 +566,7 @@ public class WoWgame {
     }
 
     public void showDebug(String message) {
-        if (message == null)
+        if (!m_debugging || message == null)
             return;
         System.err.println(message);
     }
@@ -874,9 +873,14 @@ public class WoWgame {
 
     public int idle() {
         int msec = 100;
-        if (m_initial && m_visible && !m_paused) {
+        
+        if (m_paused || m_conn == null || !m_conn.isConnected())
+            return msec;
+        
+        if (m_initial) {
+            System.out.println("Start first render");
             m_initial = false;
-            renders.add(new WoWcharlist());
+            renders.add(new WoWcharselect());
         }
         if (m_interact) {
             m_interact = false;

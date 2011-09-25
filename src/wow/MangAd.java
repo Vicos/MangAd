@@ -35,6 +35,7 @@ public class MangAd {
     private void ingame(WoWauth auth) {
         System.err.println("WoWmobile.ingame()");
         WoWgame.self().setAuth(auth);
+        WoWgame.self().pauseEvent(false);
     }
 
     private void logfail(final String error) {
@@ -93,6 +94,5 @@ public class MangAd {
             }
         };
         game.start();
-        WoWgame.self().pauseEvent(false);
     }
 }

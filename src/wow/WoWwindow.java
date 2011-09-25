@@ -7,16 +7,25 @@ import javax.swing.text.*;
 
 public class WoWwindow extends javax.swing.JFrame {
 
+    private static WoWwindow self;
+    
     public WoWwindow() {
         initComponents();
         redirectSystemStreams();
+        self = this;
     }
 
+    public static WoWwindow self() {
+        if (self == null)
+            self = new WoWwindow();
+        return self;
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPanel = new javax.swing.JTabbedPane();
+        jTabbedPane = new javax.swing.JTabbedPane();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         uiConsole = new javax.swing.JTextPane();
@@ -44,7 +53,7 @@ public class WoWwindow extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jTabbedPanel.addTab("Console", jPanel1);
+        jTabbedPane.addTab("Console", jPanel1);
 
         setJMenuBar(menuBar);
 
@@ -52,14 +61,14 @@ public class WoWwindow extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 652, Short.MAX_VALUE)
+            .addComponent(jTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 652, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
+            .addComponent(jTabbedPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
         );
 
-        jTabbedPanel.getAccessibleContext().setAccessibleName("");
+        jTabbedPane.getAccessibleContext().setAccessibleName("");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -67,13 +76,14 @@ public class WoWwindow extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTabbedPane jTabbedPanel;
+    private javax.swing.JTabbedPane jTabbedPane;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JTextPane uiConsole;
     // End of variables declaration//GEN-END:variables
 
     private void updateTextPane(final String text) {
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 Document doc = uiConsole.getDocument();
                 try {
@@ -108,4 +118,13 @@ public class WoWwindow extends javax.swing.JFrame {
         System.setErr(new PrintStream(out, true));
     }
 
+    public void addTab(String panelName, javax.swing.JPanel panel) {
+        jTabbedPane.addTab(panelName, panel);
+    }
+    
+    public void removeTab(String panelName) {
+        int idxTab = jTabbedPane.indexOfTab(panelName);
+        jTabbedPane.removeTabAt(idxTab);
+    }
+    
 }
