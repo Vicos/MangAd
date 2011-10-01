@@ -4,8 +4,6 @@ public class MangAd {
 
     private static String s_prefix = "resource:";
     
-    private Thread m_async;
-    
     public static void main (String[] args) {
         MangAd app = new MangAd();
         
@@ -23,9 +21,11 @@ public class MangAd {
             e.printStackTrace();
         }
         
-        // Game      
-        app.login(conf.GetS("user"), conf.GetS("pass"), conf.GetS("realm"));
-        app.startApp();
+        new WoWlogin(app);
+        
+        // Game
+        //app.login(conf.GetS("user"), conf.GetS("pass"), conf.GetS("realm"));
+        //app.startGame();
     }
     
     public static String resource(String name) {
@@ -38,36 +38,23 @@ public class MangAd {
         WoWgame.self().pauseEvent(false);
     }
 
-    private void logfail(final String error) {
-        System.err.println("MangAd.logfail() "+error);
-    }
-
-    private boolean login(final String user, final String pass, final String serv) {
-        System.err.println("MangAd.login() "+user);
+    public boolean login(final String user, final String pass, final String serv) throws Exception {
+        boolean ok;
         if (user == null || pass == null || serv == null || user.equals("") || pass.equals("") || serv.equals(""))
             return false;
+        
         System.err.println("Logging in "+user);
         System.err.println("Connecting to "+serv);
-        Thread login = new Thread() {
-            public void run() {
-                m_async = this;
-                WoWauth auth = new WoWauth(serv,(byte)3,(byte)3,(byte)5,12340);
-                boolean ok = auth.doLogin(user,pass);
-                System.err.println("Conn: "+auth.isConnected()+", Auth: "+ok+", error: "+auth.getError());
-                if (ok)
-                    ok = auth.doRealms();
-                if (m_async == this)
-                    m_async = null;
-                if (ok) {
-                    //auth.disconnect();
-                    ingame(auth);
-                } else {
-                    logfail(auth.getError());
-                    auth.cleanup();
-                }
-            }
-        };
-        login.start();
+        
+        WoWauth auth = new WoWauth(serv,(byte)3,(byte)3,(byte)5,12340);
+        ok = auth.doLogin(user,pass);
+        ok = auth.doRealms();
+        
+        if (ok)
+            ingame(auth);
+        else
+            throw new Exception("Login failed: "+auth.getError());
+        
         return true;
     }
 
@@ -80,8 +67,8 @@ public class MangAd {
         WoWgame.self().pauseEvent(true);
     }
 
-    public void startApp() {
-        System.err.println("MangAd.startApp()");
+    public void startGame() {
+        System.err.println("MangAd.startGame()");
         final Thread game = new Thread() {
             public void run() {
                 while (true) {
