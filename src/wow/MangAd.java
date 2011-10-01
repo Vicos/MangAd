@@ -21,7 +21,7 @@ public class MangAd {
             System.err.println(e.getMessage());
         }
         
-        // UI: logging
+        // UI
         try {
             java.awt.EventQueue.invokeAndWait(new Runnable() {
                 public void run() {

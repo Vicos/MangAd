@@ -42,6 +42,11 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
         });
 
         uiCharList.setModel(charListModel);
+        uiCharList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                uiCharListMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(uiCharList);
 
         uiWorldList.setModel(worldComboBoxModel);
@@ -58,14 +63,10 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(uiWorldList, 0, 258, Short.MAX_VALUE)
-                        .addGap(423, 423, 423))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(uiConnect)
-                            .addComponent(jScrollPane1))
-                        .addGap(423, 423, 423))))
+                    .addComponent(uiWorldList, 0, 258, Short.MAX_VALUE)
+                    .addComponent(uiConnect, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGap(423, 423, 423))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -81,14 +82,17 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
     }// </editor-fold>//GEN-END:initComponents
 
     private void connectHandler(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectHandler
-        if(evt.getSource().equals(uiConnect)) {
-            selectChar(uiCharList.getSelectedIndex());
-        }
+        selectChar(uiCharList.getSelectedIndex());
     }//GEN-LAST:event_connectHandler
 
     private void uiWorldListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uiWorldListActionPerformed
         WoWgame.self().changeWorld(uiWorldList.getSelectedIndex());
     }//GEN-LAST:event_uiWorldListActionPerformed
+
+    private void uiCharListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_uiCharListMouseClicked
+        if (evt.getClickCount() > 1)
+            selectChar(uiCharList.getSelectedIndex());
+    }//GEN-LAST:event_uiCharListMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
