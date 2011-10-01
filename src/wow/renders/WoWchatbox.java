@@ -4,6 +4,7 @@ package wow.renders;
 import java.util.HashMap;
 import java.util.Map;
 import wow.*;
+import wow.ui.WoWwindow;
 
 public class WoWchatbox extends javax.swing.JPanel implements WoWrender {
 

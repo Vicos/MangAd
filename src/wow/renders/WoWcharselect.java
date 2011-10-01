@@ -3,6 +3,7 @@ package wow.renders;
 import java.util.Vector;
 import javax.swing.*;
 import wow.*;
+import wow.ui.WoWwindow;
 
 public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
 

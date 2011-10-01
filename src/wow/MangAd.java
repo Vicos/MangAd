@@ -1,5 +1,9 @@
 package wow;
 
+import javax.swing.UIManager;
+import wow.ui.WoWlogin;
+import wow.ui.WoWwindow;        
+
 public class MangAd {
 
     private static String s_prefix = "resource:";
@@ -9,6 +13,13 @@ public class MangAd {
         
         // Config
         WoWconfig conf = new WoWconfig();
+        
+        // Look and Feel
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
         
         // UI: logging
         try {
@@ -23,9 +34,6 @@ public class MangAd {
         
         new WoWlogin(app);
         
-        // Game
-        //app.login(conf.GetS("user"), conf.GetS("pass"), conf.GetS("realm"));
-        //app.startGame();
     }
     
     public static String resource(String name) {
@@ -47,8 +55,7 @@ public class MangAd {
         System.err.println("Connecting to "+serv);
         
         WoWauth auth = new WoWauth(serv,(byte)3,(byte)3,(byte)5,12340);
-        ok = auth.doLogin(user,pass);
-        ok = auth.doRealms();
+        ok = auth.doLogin(user,pass) && auth.doRealms();
         
         if (ok)
             ingame(auth);

@@ -2,6 +2,7 @@
 package wow.renders;
 
 import wow.*;
+import wow.ui.WoWwindow;
 
 public class WoWchattab extends javax.swing.JPanel {
 
