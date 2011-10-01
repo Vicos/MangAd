@@ -40,8 +40,6 @@ public class WoWconn {
     private byte[] m_session;
     private int m_build;
     
-    private boolean m_authed;
-
     public WoWconn(final String addr) throws Exception {
         if (addr.length() == 0)
             return;
@@ -54,7 +52,6 @@ public class WoWconn {
         dCipher = null;
         eCipher = null;
         socket = null;
-        m_authed = false;
         
         reconnect(addr);
     }
@@ -303,7 +300,7 @@ public class WoWconn {
         synchronized (m_packets) {
             m_packets.addElement(pkt);
             int size = m_packets.size();
-            if (size > 0 && (size % 10) == 0)
+            if (size > 0 && (size % 100) == 0)
                 System.err.println("Queued received packets: "+size);
         }
         return true;

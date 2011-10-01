@@ -118,7 +118,7 @@ public class WoWchat {
             while ((p = s.indexOf("%s")) >= 0)
                 s = s.substring(0,p)+m_name+s.substring(p+2);
             while ((p = s.toUpperCase().indexOf("$N")) >= 0)
-                s = s.substring(0,p)+WoWgame.self().playerName()+s.substring(p+2);
+                s = s.substring(0,p)+WoWgame.self().player().name()+s.substring(p+2);
 //	    while ((p = s.toUpperCase().indexOf("$C")) >= 0)
 //	    	s = s.substring(0,p)+WoWgame.self().playerClass()+s.substring(p+2);
 //	    while ((p = s.toUpperCase().indexOf("$R")) >= 0)

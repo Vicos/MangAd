@@ -72,7 +72,7 @@ public class WoWchattab extends javax.swing.JPanel {
 
     private void sendboxHandler(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendboxHandler
         WoWchat.SendChatMessage(uiMsgInput.getText(), WoWchat.MSG_WHISPER, targetName);
-        uiChatText.append(WoWgame.self().playerName()+": "+uiMsgInput.getText()+"\n");
+        uiChatText.append(WoWgame.self().player().name()+": "+uiMsgInput.getText()+"\n");
         uiMsgInput.setText("");
     }//GEN-LAST:event_sendboxHandler
 

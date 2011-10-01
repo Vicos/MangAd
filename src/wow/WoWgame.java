@@ -19,6 +19,7 @@ public class WoWgame {
     private static WoWgame s_self = null;
     private List<WoWrender> renders;
     private boolean m_paused;
+    private boolean m_inWorld;
     private boolean m_visible;
     private boolean m_silent;
     private boolean m_detail;
@@ -38,9 +39,6 @@ public class WoWgame {
     private long m_lastUpdate;
     private WoWarea m_area;
     private WoWplayer m_player;
-    private String m_playerRealm;
-    private String m_playerName;
-    private String m_playerLevel;
     private long m_playerGuid;
     private long m_selectGuid;
     private boolean m_threatened;
@@ -70,14 +68,12 @@ public class WoWgame {
     private WoWgame() {
         renders = new ArrayList<WoWrender>();
         m_paused = true;
+        m_inWorld = false;
         m_visible = true;
         m_silent = false;
         m_detail = true;
         m_initial = true;
         m_interact = false;
-        m_shiftKey = false;
-        m_shiftLck = false;
-        m_dragging = false;
         m_stopping = false;
         m_debugging = false;
         m_width = 0;
@@ -100,48 +96,6 @@ public class WoWgame {
         m_cacheItemNames = new Hashtable();
         m_cacheChanged = false;
         loadCache();
-        m_effects = new Hashtable();
-        m_effects.put("error",new WoWeffect(0x404040,"/sounds/interface/Error.mp3"));
-        m_effects.put("normal",new WoWeffect(0xc00000));
-        m_effects.put("holy",new WoWeffect(0xc0c0c0));
-        m_effects.put("fire",new WoWeffect(0xff8000));
-        m_effects.put("nature",new WoWeffect(0x008000));
-        m_effects.put("frost",new WoWeffect(0x4040ff));
-        m_effects.put("shadow",new WoWeffect(0x404040));
-        m_effects.put("arcane",new WoWeffect(0x808000));
-        m_effects.put("swing_sword",new WoWeffect(0xc00000,
-                      "/sounds/spells/WarriorSwings/SwingWeaponSpecialWarriorA.mp3",
-                      "/sounds/spells/WarriorSwings/SwingWeaponSpecialWarriorB.mp3",
-                      "/sounds/spells/WarriorSwings/SwingWeaponSpecialWarriorC.mp3"));
-        m_effects.put("immolate",new WoWeffect(0xff8000,"/sounds/spells/Immolate.mp3"));
-        m_effects.put("cleave",new WoWeffect(0x40ff40,"/sounds/spells/CleaveTarget.mp3"));
-        m_effects.put("thunder_clap",new WoWeffect(0x000080,"/sounds/spells/ThunderClap.mp3"));
-        m_effects.put("freeze",new WoWeffect(0x4040ff,"/sounds/spells/Fizzle/FizzleFrostA.mp3"));
-        m_effects.put("poison",new WoWeffect(0x008000,"/sounds/spells/RendTarget.mp3"));
-        m_effects.put("teleport",new WoWeffect(0x80ff80,"/sounds/spells/Teleport.mp3"));
-        m_actions = new Vector(0,1);
-        m_storage = new Vector(0,1);
-        if (m_actions.isEmpty()) {
-            setAction("abilities/DualWield");
-            setAction("abilities/Gouge");
-            setAction("abilities/ShockWave");
-            setAction("abilities/Warrior_BattleShout");
-            setAction("abilities/Warrior_Charge");
-            setAction("abilities/Warrior_Cleave");
-            setAction("abilities/Warrior_Sunder");
-            setAction("spells/Nature_ThunderClap");
-            setAction("inventory/Sword_05");
-            setAction("inventory/Sword_48");
-            setAction("spells_/Frost_Stun");
-        }
-        if (m_storage.isEmpty()) {
-            setStorage("inventory/Bag_01");
-            setStorage("inventory/Bag_07_Red");
-            setStorage("inventory/Bag_09");
-            setStorage("inventory/Bag_10_Green");
-            setStorage("inventory/Bag_18");
-            setStorage("inventory/Bag_20");
-        }
     }
 
     public static WoWgame self() {
@@ -159,24 +113,6 @@ public class WoWgame {
     public void setAuth(WoWauth auth) {
         m_auth = auth;
         auth.disconnect();
-        /*if (auth != null) {
-            Vector<WoWrealm> realms = auth.realms();
-            if (realms != null && !realms.isEmpty()) {
-                WoWrealm realm = realms.firstElement();
-                try {
-                    System.out.println("WoWgame: connection");
-                    m_playerRealm = realm.name();
-                    m_conn = new WoWconn(realm.addr());
-                    m_conn.setAuth(auth.getAccount(),auth.sessionKey(),auth.buildNo());
-                    m_conn.start();
-                    auth.disconnect();
-                }
-                catch (Exception e) {
-                    System.err.println(e.getMessage());
-                }
-            }
-        }*/
-        System.out.println("m_conn:"+m_conn);
     }
     
     public Vector<WoWrealm> getWorldList() {
@@ -197,8 +133,6 @@ public class WoWgame {
                 try {
                     if (m_conn != null)
                         m_conn.disconnect();
-
-                    m_playerRealm = realm.name();
                     m_conn = new WoWconn(realm.addr());
                     m_conn.setAuth(m_auth.getAccount(),m_auth.sessionKey(),m_auth.buildNo());
                     m_conn.start();
@@ -210,6 +144,13 @@ public class WoWgame {
         }
     }
 
+    public void enterWorld(long playerGuid) {
+        assert !m_inWorld;
+        m_conn.writePacket(WoWpacket.CMSG_PLAYER_LOGIN,playerGuid);
+        m_playerGuid = playerGuid;
+        m_inWorld = true;
+    }
+    
     public void stop() {
         m_paused = true;
         m_visible = false;
@@ -282,18 +223,6 @@ public class WoWgame {
         return m_player;
     }
 
-    public String playerRealm() {
-        return m_playerRealm;
-    }
-
-    public String playerName() {
-        return m_playerName;
-    }
-
-    public String playerLevel() {
-        return m_playerLevel;
-    }
-
     public long playerGuid() {
         return m_playerGuid;
     }
@@ -358,13 +287,6 @@ public class WoWgame {
         return m_info;
     }
 
-    public void setCharacter(WoWchar chr) {
-        m_playerGuid = chr.guid();
-        m_playerName = chr.name();
-        m_playerLevel = chr.level();
-        m_mapArea = chr.area();
-    }
-
     public void setBlip(long guid, double x, double y, double z, int color) {
         WoWblip b = new WoWblip(guid,color);
         b.X = x;
@@ -390,8 +312,6 @@ public class WoWgame {
     }
 
     public void loggedOut() {
-        m_playerName = null;
-        m_playerLevel = null;
         m_playerGuid = 0;
         m_selectGuid = 0;
         m_threatened = false;
@@ -813,16 +733,6 @@ public class WoWgame {
                 m_mapY = 16383.0;
         }
         int i;
-        for (i = 0; i < m_actions.size(); i++) {
-            WoWaction act = (WoWaction)m_actions.elementAt(i);
-            if (act != null)
-                act.clearGrayed(1);
-        }
-        for (i = 0; i < m_storage.size(); i++) {
-            WoWaction act = (WoWaction)m_storage.elementAt(i);
-            if (act != null)
-                act.clearGrayed(1);
-        }
         if (moved)
             netMovement(WoWpacket.MSG_MOVE_HEARTBEAT);
     }
