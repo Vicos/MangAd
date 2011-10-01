@@ -158,16 +158,53 @@ public class WoWgame {
 
     public void setAuth(WoWauth auth) {
         m_auth = auth;
-        if (auth != null) {
-            Vector realms = auth.realms();
+        auth.disconnect();
+        /*if (auth != null) {
+            Vector<WoWrealm> realms = auth.realms();
             if (realms != null && !realms.isEmpty()) {
-                WoWrealm realm = (WoWrealm)realms.firstElement();
-                if (realm != null) {
+                WoWrealm realm = realms.firstElement();
+                try {
+                    System.out.println("WoWgame: connection");
                     m_playerRealm = realm.name();
                     m_conn = new WoWconn(realm.addr());
                     m_conn.setAuth(auth.getAccount(),auth.sessionKey(),auth.buildNo());
                     m_conn.start();
                     auth.disconnect();
+                }
+                catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+        }*/
+        System.out.println("m_conn:"+m_conn);
+    }
+    
+    public Vector<WoWrealm> getWorldList() {
+        if (m_auth != null) {
+            return m_auth.realms();
+        }
+        return null;
+    }
+    
+    public void changeWorld(int serverID) {
+        System.out.println("WoWgame: changeWorld");
+        
+        if(m_auth != null) {
+            m_auth.doRealms();
+            Vector realms = m_auth.realms();
+            WoWrealm realm = (WoWrealm)realms.get(serverID);
+            if (realm != null) {
+                try {
+                    if (m_conn != null)
+                        m_conn.disconnect();
+
+                    m_playerRealm = realm.name();
+                    m_conn = new WoWconn(realm.addr());
+                    m_conn.setAuth(m_auth.getAccount(),m_auth.sessionKey(),m_auth.buildNo());
+                    m_conn.start();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -187,6 +224,7 @@ public class WoWgame {
             m_auth = null;
         }
         if (m_conn != null) {
+            m_conn.writePacket(WoWpacket.CMSG_PLAYER_LOGOUT);
             m_conn.disconnect();
             m_conn = null;
         }
@@ -226,14 +264,6 @@ public class WoWgame {
 
     public boolean dragging() {
         return m_dragging;
-    }
-
-    public int width() {
-        return m_width;
-    }
-
-    public int height() {
-        return m_height;
     }
 
     public WoWauth auth() {
@@ -869,7 +899,7 @@ public class WoWgame {
     public int idle() {
         int msec = 100;
         
-        if (m_paused || m_conn == null || !m_conn.isConnected())
+        if (m_paused)
             return msec;
         
         if (m_initial) {
@@ -878,6 +908,7 @@ public class WoWgame {
             renders.add(new WoWcharselect());
             renders.add(new WoWchatbox());
         }
+        
         if (m_interact) {
             m_interact = false;
             msec = 0;

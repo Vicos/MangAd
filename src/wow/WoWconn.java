@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URI;
 import java.util.Random;
 import java.util.Vector;
 import gnu.java.security.hash.*;
@@ -40,34 +39,36 @@ public class WoWconn {
     private String m_account;
     private byte[] m_session;
     private int m_build;
+    
+    private boolean m_authed;
 
-    public WoWconn(final String addr) {
+    public WoWconn(final String addr) throws Exception {
+        if (addr.length() == 0)
+            return;
         m_reader = null;
         m_packets = new Vector(0,1);
         m_account = null;
         m_session = null;
         m_build = 0;
-        disconnect();
         errorStr = null;
-        if (addr.length() == 0)
-            return;
         dCipher = null;
         eCipher = null;
-        try {
-            String hostname = addr.substring(0, addr.lastIndexOf(':'));
-            int port = Integer.parseInt(addr.substring(addr.lastIndexOf(':')+1));
-            socket = new Socket(hostname, port);
-            iStream = socket.getInputStream();
-            oStream = socket.getOutputStream();
-        } catch (Exception e) {
-            socket = null;
-            iStream = null;
-            oStream = null;
-            e.printStackTrace();
-            return;
-        }
+        socket = null;
+        m_authed = false;
+        
+        reconnect(addr);
     }
 
+    public void reconnect(final String addr) throws Exception {
+        if (isConnected())
+            disconnect();
+        String hostname = addr.substring(0, addr.lastIndexOf(':'));
+        int port = Integer.parseInt(addr.substring(addr.lastIndexOf(':')+1));
+        socket = new Socket(hostname, port);
+        iStream = socket.getInputStream();
+        oStream = socket.getOutputStream();
+    }
+    
     public void disconnect() {
         stop();
         iStream = null;
@@ -188,7 +189,6 @@ public class WoWconn {
     }
 
     private boolean writeByte(byte[] buf) {
-        //System.err.println("WoWconn.writeByte() "+buf.length);
         try {
             synchronized (oStream) {
                 oStream.write(buf);
@@ -250,8 +250,10 @@ public class WoWconn {
             return pkt;
         System.err.println("Got auth challenge packet");
         if (m_account == null || m_session == null || m_build == 0 ||
-                pkt.data() == null || pkt.data().length < 8)
+                pkt.data() == null || pkt.data().length < 8) {
+            System.err.println("Invalid SMSG_AUTH_CHALLENGE");
             return null;
+        }
         try {
             Sha160 h = new Sha160();
             byte[] unk = new byte[4];
@@ -318,11 +320,8 @@ public class WoWconn {
     }
 
     public boolean writePacket(int cmd, byte[] buf) {
+        assert eCipher != null || cmd == WoWpacket.CMSG_AUTH_SESSION;
         int len = (buf == null) ? 0 : buf.length;
-        /*
-        System.err.println("Writing packet cmd=0x"+Integer.toHexString(cmd)+
-            " data len=0x"+Integer.toHexString(len)+" ("+len+")");
-         */
         len += 4;
         byte hdr[] = new byte[6];
         hdr[0] = (byte)(len >> 8);

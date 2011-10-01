@@ -11,6 +11,7 @@ public class WoWpacket {
     public static final int SMSG_CHAR_ENUM                            = 0x03B;
     public static final int CMSG_PLAYER_LOGIN                         = 0x03D;
     public static final int SMSG_LOGIN_SETTIMESPEED                   = 0x042;
+    public static final int CMSG_PLAYER_LOGOUT                        = 0x04A;
     public static final int CMSG_NAME_QUERY                           = 0x050;
     public static final int SMSG_NAME_QUERY_RESPONSE                  = 0x051;
     public static final int CMSG_PET_NAME_QUERY                       = 0x052;

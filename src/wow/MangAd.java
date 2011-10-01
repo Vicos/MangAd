@@ -33,17 +33,17 @@ public class MangAd {
     }
 
     private void ingame(WoWauth auth) {
-        System.err.println("WoWmobile.ingame()");
+        System.err.println("MangAd.ingame()");
         WoWgame.self().setAuth(auth);
         WoWgame.self().pauseEvent(false);
     }
 
     private void logfail(final String error) {
-        System.err.println("WoWmobile.logfail() "+error);
+        System.err.println("MangAd.logfail() "+error);
     }
 
     private boolean login(final String user, final String pass, final String serv) {
-        System.err.println("WoWmobile.login() "+user);
+        System.err.println("MangAd.login() "+user);
         if (user == null || pass == null || serv == null || user.equals("") || pass.equals("") || serv.equals(""))
             return false;
         System.err.println("Logging in "+user);
@@ -59,7 +59,7 @@ public class MangAd {
                 if (m_async == this)
                     m_async = null;
                 if (ok) {
-                    auth.disconnect();
+                    //auth.disconnect();
                     ingame(auth);
                 } else {
                     logfail(auth.getError());
@@ -72,7 +72,7 @@ public class MangAd {
     }
 
     public void destroyApp(boolean unconditional) {
-        System.err.println("WoWmobile.destroyApp() "+unconditional);
+        System.err.println("MangAd.destroyApp() "+unconditional);
         System.err.flush();
     }
 
@@ -81,7 +81,7 @@ public class MangAd {
     }
 
     public void startApp() {
-        System.err.println("WoWmobile.startApp()");
+        System.err.println("MangAd.startApp()");
         final Thread game = new Thread() {
             public void run() {
                 while (true) {

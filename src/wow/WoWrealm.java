@@ -21,5 +21,8 @@ public class WoWrealm {
     public String addr() {
         return m_addr;
     }
-
+    
+    public String toString() {
+        return name();
+    }
 }

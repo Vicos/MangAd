@@ -1,5 +1,6 @@
 package wow.renders;
 
+import java.util.Vector;
 import javax.swing.*;
 import wow.*;
 
@@ -11,11 +12,14 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
     private int m_charCount;
     private WoWchar m_chars[];
     
+    private DefaultComboBoxModel worldComboBoxModel;
     private DefaultListModel charListModel;
         
     public WoWcharselect() {
+        worldComboBoxModel = new DefaultComboBoxModel();
         charListModel = new DefaultListModel();
         initComponents();
+        updateWorldList();
         WoWwindow.self().addTab(tabName, this);
         WoWwindow.self().focusTab(tabName);
     }
@@ -27,6 +31,7 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
         uiConnect = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         uiCharList = new javax.swing.JList();
+        uiWorldList = new javax.swing.JComboBox();
 
         uiConnect.setText("Connect");
         uiConnect.addActionListener(new java.awt.event.ActionListener() {
@@ -38,6 +43,13 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
         uiCharList.setModel(charListModel);
         jScrollPane1.setViewportView(uiCharList);
 
+        uiWorldList.setModel(worldComboBoxModel);
+        uiWorldList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                uiWorldListActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -45,15 +57,22 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(uiConnect, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(uiWorldList, 0, 258, Short.MAX_VALUE)
+                        .addGap(423, 423, 423))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(uiConnect)
+                            .addComponent(jScrollPane1))
+                        .addGap(423, 423, 423))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
+                .addComponent(uiWorldList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(uiConnect)
                 .addContainerGap())
@@ -66,19 +85,33 @@ public class WoWcharselect extends javax.swing.JPanel implements WoWrender {
         }
     }//GEN-LAST:event_connectHandler
 
+    private void uiWorldListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uiWorldListActionPerformed
+        WoWgame.self().changeWorld(uiWorldList.getSelectedIndex());
+    }//GEN-LAST:event_uiWorldListActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JList uiCharList;
     private javax.swing.JButton uiConnect;
+    private javax.swing.JComboBox uiWorldList;
     // End of variables declaration//GEN-END:variables
 
+    private void updateWorldList() {
+        Vector<WoWrealm> realms = WoWgame.self().getWorldList();
+        for (WoWrealm realm : realms) {
+            worldComboBoxModel.addElement(realm);
+        }
+        uiWorldList.setSelectedItem(WoWgame.self().playerRealm());
+    }
     
     private void updateCharList() {
+        charListModel.clear();
         for(WoWchar chr : m_chars) {
             charListModel.addElement(chr);
         }
     }
     
+    @Override
     public boolean netEvent(WoWpacket pkt) {
         switch (pkt.code()) {
         case WoWpacket.SMSG_AUTH_RESPONSE:
